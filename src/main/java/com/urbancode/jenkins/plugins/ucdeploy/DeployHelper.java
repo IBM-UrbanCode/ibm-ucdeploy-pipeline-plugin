@@ -267,6 +267,8 @@ public class DeployHelper {
         private String snapshotName;
         private Boolean deployWithSnapshot;
         private Boolean updateSnapshotComp;
+        //Aded
+        private Boolean createSnapshotComp;
         private Boolean includeOnlyDeployVersions;
 
         @DataBoundConstructor
@@ -274,6 +276,8 @@ public class DeployHelper {
             this.snapshotName = snapshotName;
             this.deployWithSnapshot = deployWithSnapshot;
             this.updateSnapshotComp = updateSnapshotComp;
+            // Added
+            this.createSnapshotComp = createSnapshotComp;
             this.includeOnlyDeployVersions = includeOnlyDeployVersions;
         }
 
@@ -299,6 +303,17 @@ public class DeployHelper {
             }
         }
         
+        // Added
+        public Boolean createSnapshotComp() {
+            if (createSnapshotComp != null) {
+                return createSnapshotComp;
+            }
+            else {
+                return false;
+            }
+        }
+
+
         public Boolean getIncludeOnlyDeployVersions() {
             if (includeOnlyDeployVersions != null) {
                 return includeOnlyDeployVersions;
@@ -362,6 +377,7 @@ public class DeployHelper {
 
         /* Create snapshot preemptively to deploy */
         if (doCreateSnapshot && createSnapshot.getDeployWithSnapshot()) {
+            listener.getLogger().println("[ !!!!! IF !!!!! ]");
             snapshot = envVars.expand(createSnapshot.getSnapshotName());
             doCreateSnapshot = false; // Set to false so reactive snapshot isn't created also
 
@@ -372,6 +388,7 @@ public class DeployHelper {
             }
             else {
                 componentVersions = readComponentVersions(deployVersions);  // Versions to add to new snapshot
+                listener.getLogger().println("[componentVersions] '" + componentVersions + "'");
             }
 
             listener.getLogger().println("Creating environment snapshot '" + snapshot
@@ -379,8 +396,12 @@ public class DeployHelper {
 
             try {
                 if (createSnapshot.getIncludeOnlyDeployVersions()) {
+                    listener.getLogger().println("[5555555555 - IF]");
                     appClient.createSnapshot(snapshot, deployDesc, deployApp, componentVersions);
                 } else {
+                    listener.getLogger().println("[5555555555 - ELSE]");
+                    listener.getLogger().println("[snapshot---11111] '" + snapshot + "'");
+                    listener.getLogger().println("[deployDesc---11111] '" + deployDesc + "'");
                     appClient.createSnapshotOfEnvironment(deployEnv, deployApp, snapshot, deployDesc);
                 }
             } catch (Exception ex) {
@@ -396,10 +417,13 @@ public class DeployHelper {
 
             listener.getLogger().println("Acquiring all versions of the snapshot.");
             JSONArray snapshotVersions = appClient.getSnapshotVersions(snapshot, deployApp);
+            listener.getLogger().println("[snapshotVersions] '" + snapshotVersions + "'");
+
             Map<String, JSONArray> compVersionMap = new HashMap<String, JSONArray>();
 
             /* Create a map of component name to a list of its versions in the snapshot */
             for (int i = 0; i < snapshotVersions.length(); i++) {
+                listener.getLogger().println("[11111]");
                 JSONObject snapshotComponent = snapshotVersions.getJSONObject(i);
                 String name = snapshotComponent.getString("name");
                 JSONArray versions = snapshotComponent.getJSONArray("desiredVersions");
@@ -428,6 +452,7 @@ public class DeployHelper {
                 for (String version : entry.getValue()) {
                     listener.getLogger().println("Adding component version '" + version +
                             "' of component '" + component + "' to snapshot.");
+                     // will uncomment this later       
                     appClient.addVersionToSnapshot(snapshot, deployApp, version, component);
                 }
             }
@@ -436,6 +461,7 @@ public class DeployHelper {
         }
         /* Deploy with component versions or a pre-existing snapshot */
         else {
+            listener.getLogger().println("[ !!!!! ELSE !!!!! ]");
             if (deployVersions.toUpperCase().startsWith("SNAPSHOT=")) {
                 if (deployVersions.contains("\n")) {
                     throw new AbortException("Only a single SNAPSHOT can be specified");
@@ -494,11 +520,12 @@ public class DeployHelper {
 
         /* create snapshot of environment reactively, as a result of successful deployment */
         if (doCreateSnapshot) {
+            listener.getLogger().println("[ !!!!! finally creating the snapshot !!!!! ]");
             String snapshotName = envVars.expand(createSnapshot.getSnapshotName());
-
             listener.getLogger().println("Creating environment snapshot '" + snapshotName
                     + "' in UrbanCode Deploy.");
-            appClient.createSnapshotOfEnvironment(deployEnv, deployApp, snapshotName, deployDesc);
+            // will uncomment later        
+            // appClient.createSnapshotOfEnvironment(deployEnv, deployApp, snapshotName, deployDesc);
             listener.getLogger().println("Successfully created environment snapshot.");
         }
 

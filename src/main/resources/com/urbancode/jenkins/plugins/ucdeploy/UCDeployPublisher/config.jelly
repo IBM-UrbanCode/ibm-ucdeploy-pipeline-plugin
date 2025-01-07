@@ -142,6 +142,18 @@
                 </div>
               </f:block>
             </f:optionalBlock>
+            <f:optionalBlock name="createSnapshotComponent"
+                             title="Create As New Snapshot with Component Versions"
+                             help="${helpURL}/deploy/create/help.html"
+                             checked="${instance.createProcessChecked()}">
+              <f:block>
+                <div>
+                  <f:entry field="newSnapshotName" title="Snapshot Name" help="${helpURL}/deploy/create/comp.html">
+                    <f:textbox/>
+                  </f:entry>
+                </div>
+              </f:block>
+            </f:optionalBlock>
             <f:optionalBlock name="createSnapshot"
                              title="Create/Update Snapshot of Build Environment"
                              help="${helpURL}/deploy/snapshot/help.html"
